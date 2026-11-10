@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BE READY, STAY SAFE! - Interactive Storybook</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Comic Neue & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            blue: '#1E3A8A',
+                            sky: '#0284C7',
+                            yellow: '#F59E0B',
+                            green: '#10B981',
+                            red: '#EF4444',
+                            purple: '#8B5CF6',
+                            chalkboard: '#1C3A27',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        fun: ['Comic Neue', 'cursive'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #F0F9FF;
+            background-image: radial-gradient(#E0F2FE 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .chalkboard {
+            background-color: #1E293B;
+            border: 12px solid #854D0E;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 10px 25px rgba(0,0,0,0.3);
+            border-radius: 1rem;
+        }
+
+        .storybook-card {
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            border: 3px solid #E2E8F0;
+        }
+
+        .btn-bounce:hover {
+            transform: translateY(-3px) scale(1.02);
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .btn-bounce:active {
+            transform: translateY(1px) scale(0.98);
+        }
+
+        .word-search-grid {
+            user-select: none;
+            touch-action: none;
+        }
+
+        .word-cell {
+            transition: background-color 0.15s ease;
+        }
+
+        .word-cell.selected {
+            background-color: #3B82F6;
+            color: white;
+        }
+
+        .word-cell.found {
+            background-color: #10B981;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Certificate Print Styling */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #certificateModal, #certificateModal * {
+                visibility: visible;
+            }
+            #certificateModal {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background: white !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F1F5F9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94A3B8;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="font-sans text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <!-- TOP NAV / HEADER BAR -->
+    <header class="bg-brand-blue text-white shadow-lg sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <span class="text-3xl">🎒</span>
+                <div>
+                    <h1 class="font-fun font-bold text-xl sm:text-2xl text-amber-300 leading-none">BE READY, STAY SAFE!</h1>
+                    <p class="text-xs text-sky-200">English Unit 7 • 1.° Sec. AIP - Perú</p>
+                </div>
+            </div>
+
+            <!-- Student Info & Mute Sound -->
+            <div class="flex items-center space-x-4">
+                <div id="userInfoHeader" class="hidden sm:flex items-center space-x-2 bg-blue-900/60 px-3 py-1.5 rounded-full border border-blue-400/30 text-sm">
+                    <span id="headerAvatar">👦</span>
+                    <span id="headerStudentName" class="font-semibold text-amber-200">Estudiante</span>
+                </div>
+                <button id="soundToggleBtn" onclick="toggleSound()" class="bg-blue-800 hover:bg-blue-700 p-2 rounded-full text-amber-300 text-lg transition" title="Toggle Sound">
+                    <i class="fas fa-volume-up" id="soundIcon"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Progress Bar (Visible inside chapters) -->
+        <div id="progressBarContainer" class="hidden bg-slate-900/40 h-3 w-full">
+            <div id="progressBar" class="bg-gradient-to-r from-amber-400 to-emerald-400 h-full w-0 transition-all duration-500"></div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="max-w-5xl mx-auto px-4 py-6 flex-grow w-full">
+
+        <!-- SCREEN 0: COVER & REGISTRATION -->
+        <section id="screenCover" class="storybook-card p-6 sm:p-10 text-center max-w-2xl mx-auto border-4 border-amber-300 relative overflow-hidden">
+            <div class="absolute -right-12 -top-12 bg-amber-100 rounded-full w-40 h-40 -z-0 opacity-50"></div>
+            <div class="relative z-10">
+                <span class="inline-block bg-amber-100 text-amber-800 px-4 py-1.5 rounded-full font-semibold text-sm mb-4 border border-amber-300">
+                    🇵🇪 Unidad de Aprendizaje N.° 7 - CNEB
+                </span>
+                
+                <h2 class="font-fun text-4xl sm:text-5xl font-extrabold text-brand-blue mb-2">THE SAFETY ADVENTURE</h2>
+                <p class="text-slate-600 font-medium mb-6">Aprende a dar consejos, reglas y preparar la mochila de emergencia frente a sismos en inglés.</p>
+                
+                <div class="bg-sky-50 p-6 rounded-2xl border-2 border-sky-200 mb-6 text-left">
+                    <label class="block text-slate-700 font-bold mb-2 text-sm" for="studentNameInput">
+                        <i class="fas fa-user-graduate text-brand-sky mr-1"></i> Enter your full name:
+                    </label>
+                    <input type="text" id="studentNameInput" placeholder="Ex. Maria Flores Huamán" 
+                        class="w-full px-4 py-3 rounded-xl border-2 border-slate-300 focus:border-brand-sky focus:outline-none text-lg font-semibold mb-4">
+
+                    <label class="block text-slate-700 font-bold mb-2 text-sm">
+                        <i class="fas fa-user-astronaut text-brand-sky mr-1"></i> Choose your character:
+                    </label>
+                    <div class="grid grid-cols-4 gap-3 text-center">
+                        <button onclick="selectAvatar('👦')" class="avatar-opt p-3 text-3xl border-2 border-slate-200 rounded-xl hover:border-brand-sky focus:border-brand-sky bg-white">👦</button>
+                        <button onclick="selectAvatar('👧')" class="avatar-opt p-3 text-3xl border-2 border-slate-200 rounded-xl hover:border-brand-sky focus:border-brand-sky bg-white">👧</button>
+                        <button onclick="selectAvatar('🧑‍🏫')" class="avatar-opt p-3 text-3xl border-2 border-slate-200 rounded-xl hover:border-brand-sky focus:border-brand-sky bg-white">🧑‍🏫</button>
+                        <button onclick="selectAvatar('🦸‍♂️')" class="avatar-opt p-3 text-3xl border-2 border-slate-200 rounded-xl hover:border-brand-sky focus:border-brand-sky bg-white">🦸‍♂️</button>
+                    </div>
+                </div>
+
+                <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200 mb-6 text-xs text-emerald-800 flex items-center space-x-3">
+                    <i class="fas fa-bullhorn text-2xl text-emerald-600"></i>
+                    <p class="text-left"><strong>Propósito:</strong> Demuestra tus conocimientos sobre <em>SHOULD, MUST</em> y <em>HAVE TO</em> para obtener tu <strong>Certificate of Achievement</strong> (Puntaje máx: 20 pts).</p>
+                </div>
+
+                <button onclick="startStorybook()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-fun font-bold text-2xl py-4 px-8 rounded-2xl shadow-lg border-b-4 border-amber-700 btn-bounce flex items-center justify-center space-x-3">
+                    <span>EMPEZAR AVENTURA</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- CHAPTER 1 CONTAINER -->
+        <section id="screenChapter1" class="hidden space-y-6">
+            <!-- Header Banner -->
+            <div class="bg-gradient-to-r from-blue-600 to-sky-500 text-white p-6 rounded-2xl shadow-md flex justify-between items-center">
+                <div>
+                    <span class="bg-white/20 text-white text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider">Capítulo 1</span>
+                    <h2 class="font-fun text-3xl font-extrabold text-amber-200 mt-1">Give Good Advice!</h2>
+                    <p class="text-sky-100 text-sm">Uso de <strong>SHOULD</strong> / <strong>SHOULDN'T</strong> para dar recomendaciones.</p>
+                </div>
+                <div class="text-5xl hidden sm:block">🚨</div>
+            </div>
+
+            <!-- Narrative & Grammar Box -->
+            <div class="storybook-card p-6 border-l-8 border-sky-500">
+                <div class="flex items-start space-x-4 mb-4">
+                    <span class="text-3xl">🧑‍🏫</span>
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-lg">Situación escolar:</h3>
+                        <p class="text-slate-600 text-sm">Los estudiantes del 1.° de secundaria están preparando el colegio para el simulacro de sismo. Necesitan aprender a dar consejos sobre cómo mantenerse seguros antes y durante la emergencia.</p>
+                    </div>
+                </div>
+
+                <div class="chalkboard p-5 text-white font-fun">
+                    <h4 class="text-amber-300 font-bold text-xl mb-2 flex items-center">
+                        <i class="fas fa-graduation-cap mr-2"></i> Gramática: SHOULD / SHOULDN'T
+                    </h4>
+                    <p class="text-slate-200 text-sm mb-3">Usamos <strong>SHOULD</strong> para dar consejos positivos (debería) y <strong>SHOULDN'T</strong> para consejos negativos (no debería).</p>
+                    <div class="grid sm:grid-cols-2 gap-3 text-xs sm:text-sm font-sans">
+                        <div class="bg-white/10 p-3 rounded-lg border border-white/20">
+                            <span class="text-emerald-400 font-bold block mb-1">✔ SHOULD (Consejo)</span>
+                            <p>We <strong>should</strong> prepare an emergency kit.<br><span class="text-slate-300 italic">(Deberíamos preparar un botiquín/mochila)</span></p>
+                        </div>
+                        <div class="bg-white/10 p-3 rounded-lg border border-white/20">
+                            <span class="text-rose-400 font-bold block mb-1">✖ SHOULDN'T (No consejo)</span>
+                            <p>We <strong>shouldn't</strong> run during a quake.<br><span class="text-slate-300 italic">(No deberíamos correr durante el sismo)</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chapter 1 Exercises -->
+            <div class="storybook-card p-6 space-y-8">
+                <!-- Ex 1 -->
+                <div>
+                    <h4 class="font-bold text-brand-blue text-lg mb-4 flex items-center">
+                        <span class="bg-sky-100 text-sky-700 w-8 h-8 rounded-full flex items-center justify-center mr-2 text-sm font-bold">1</span>
+                        Exercise 1: Choose the correct option (2 pts)
+                    </h4>
+                    <div id="ch1-ex1-container" class="space-y-4"></div>
+                </div>
+
+                <hr class="border-slate-200">
+
+                <!-- Ex 2 -->
+                <div>
+                    <h4 class="font-bold text-brand-blue text-lg mb-4 flex items-center">
+                        <span class="bg-sky-100 text-sky-700 w-8 h-8 rounded-full flex items-center justify-center mr-2 text-sm font-bold">2</span>
+                        Exercise 2: Complete with SHOULD or SHOULDN'T (2 pts)
+                    </h4>
+                    <div id="ch1-ex2-container" class="space-y-4"></div>
+                </div>
+
+                <hr class="border-slate-200">
+
+                <!-- Ex 3 -->
+                <div>
+                    <h4 class="font-bold text-brand-blue text-lg mb-4 flex items-center">
+                        <span class="bg-sky-100 text-sky-700 w-8 h-8 rounded-full flex items-center justify-center mr-2 text-sm font-bold">3</span>
+                        Exercise 3: Match the Situation with the Advice (2 pts)
+                    </h4>
+                    <p class="text-xs text-slate-500 mb-3">Haz clic en una situación a la izquierda y luego en su consejo correspondiente a la derecha.</p>
+                    <div id="ch1-ex3-container" class="grid sm:grid-cols-2 gap-4">
+                        <div id="ch1-situations" class="space-y-2"></div>
+                        <div id="ch1-advices" class="space-y-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Chapter 1 -->
+            <div class="flex justify-between items-center pt-4">
+                <button onclick="showScreen('screenCover')" class="bg-slate-300 hover:bg-slate-400 text-slate-700 font-bold px-6 py-3 rounded-xl">
+                    <i class="fas fa-arrow-left mr-2"></i> Inicio
+                </button>
+                <button onclick="validateChapter1()" class="bg-amber-500 hover:bg-amber-600 text-white font-fun font-bold text-xl px-8 py-3 rounded-xl shadow-lg border-b-4 border-amber-700 btn-bounce">
+                    Siguiente Capítulo <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- CHAPTER 2 CONTAINER -->
+        <section id="screenChapter2" class="hidden space-y-6">
+            <!-- Header Banner -->
+            <div class="bg-gradient-to-r from-purple-600 to-indigo-500 text-white p-6 rounded-2xl shadow-md flex justify-between items-center">
+                <div>
+                    <span class="bg-white/20 text-white text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider">Capítulo 2</span>
+                    <h2 class="font-fun text-3xl font-extrabold text-amber-200 mt-1">Follow the Safety Rules!</h2>
+                    <p class="text-indigo-100 text-sm">Uso de <strong>MUST</strong> / <strong>MUSTN'T</strong> para reglas obligatorias.</p>
+                </div>
+                <div class="text-5xl hidden sm:block">🛑</div>
+            </div>
+
+            <!-- Narrative & Grammar Box -->
+            <div class="storybook-card p-6 border-l-8 border-purple-500">
+                <div class="flex items-start space-x-4 mb-4">
+                    <span class="text-3xl">🏫</span>
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-lg">Simulacro en progreso:</h3>
+                        <p class="text-slate-600 text-sm">La alarma ha sonado. Durante el simulacro nacional, los estudiantes deben seguir reglas estrictas para evacuar hacia las zonas seguras (círculos amarillos).</p>
+                    </div>
+                </div>
+
+                <div class="chalkboard p-5 text-white font-fun">
+                    <h4 class="text-amber-300 font-bold text-xl mb-2 flex items-center">
+                        <i class="fas fa-exclamation-triangle mr-2"></i> Gramática: MUST / MUSTN'T
+                    </h4>
+                    <p class="text-slate-200 text-sm mb-3"><strong>MUST</strong> indica una regla obligatoria (debes). <strong>MUSTN'T</strong> expresa prohibición directa (no debes/está prohibido).</p>
+                    <div class="grid sm:grid-cols-2 gap-3 text-xs sm:text-sm font-sans">
+                        <div class="bg-white/10 p-3 rounded-lg border border-white/20">
+                            <span class="text-emerald-400 font-bold block mb-1">✔ MUST (Obligación)</span>
+                            <p>We <strong>must</strong> protect our heads.<br><span class="text-slate-300 italic">(Debemos proteger nuestra cabeza)</span></p>
+                        </div>
+                        <div class="bg-white/10 p-3 rounded-lg border border-white/20">
+                            <span class="text-rose-400 font-bold block mb-1">✖ MUSTN'T (Prohibición)</span>
+                            <p>We <strong>mustn't</strong> block the evacuation exit.<br><span class="text-slate-300 italic">(No debemos bloquear la salida)</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chapter 2 Exercises -->
+            <div class="storybook-card p-6 space-y-8">
+                <!-- Ex 1 -->
+                <div>
+                    <h4 class="font-bold text-brand-blue text-lg mb-4 flex items-center">
+                        <span class="bg-purple-100 text-purple-700 w-8 h-8 rounded-full flex items-center justify-center mr-2 text-sm font-bold">1</span>
+                        Exercise 1: Multiple Choice Rules (2 pts)
+                    </h4>
+                    <div id="ch2-ex1-container" class="space-y-4"></div>
+                </div>
+
+                <hr class="border-slate-200">
+
+                <!-- Ex 2 -->
+                <div>
+                    <h4 class="font-bold text-brand-blue text-lg mb-4 flex items-center">
+                        <span class="bg-purple-100 text-purple-700 w-8 h-8 rounded-full flex items-center justify-center mr-2 text-sm font-bold">2</span>
+                        Exercise 2: Complete with MUST or MUSTN'T (2 pts)
+                    </h4>
+                    <div id="ch2-ex2-container" class="space-y-4"></div>
+                </div>
+
+                <hr class="border-slate-200">
+
+                <!-- Ex 3: Word Search -->
+                <div>
+                    <h4 class="font-bold text-brand-blue text-lg mb-2 flex items-center">
+                        <span class="bg-purple-100 text-purple-700 w-8 h-8 rounded-full flex items-center justify-center mr-2 text-sm font-bold">3</span>
+                        Exercise 3: Word Search – Safety Vocabulary (3 pts)
+                    </h4>
+                    <p class="text-xs text-slate-500 mb-4">Encuentra las 8 palabras de prevención en la sopa de letras. Haz clic en las letras de cada palabra.</p>
+
+                    <div class="grid md:grid-cols-3 gap-6 items-start">
+                        <!-- Grid -->
+                        <div class="md:col-span-2 overflow-x-auto">
+                            <div id="wordSearchGrid" class="word-search-grid grid grid-cols-10 gap-1 bg-slate-800 p-3 rounded-2xl max-w-sm mx-auto sm:max-w-none">
+                                <!-- Cells JS dynamically injected -->
+                            </div>
+                        </div>
+                        <!-- Word List -->
+                        <div class="bg-purple-50 p-4 rounded-xl border border-purple-200">
+                            <h5 class="font-bold text-purple-900 text-sm mb-3">Palabras a buscar (<span id="wordsFoundCount">0</span>/8):</h5>
+                            <div id="wordSearchList" class="grid grid-cols-2 gap-2 text-xs font-semibold">
+                                <!-- Words list JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Chapter 2 -->
+            <div class="flex justify-between items-center pt-4">
+                <button onclick="showScreen('screenChapter1')" class="bg-slate-300 hover:bg-slate-400 text-slate-700 font-bold px-6 py-3 rounded-xl">
+                    <i class="fas fa-arrow-left mr-2"></i> Cap. 1
+                </button>
+                <button onclick="validateChapter2()" class="bg-amber-500 hover:bg-amber-600 text-white font-fun font-bold text-xl px-8 py-3 rounded-xl shadow-lg border-b-4 border-amber-700 btn-bounce">
+                    Siguiente Capítulo <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- CHAPTER 3 CONTAINER -->
+        <section id="screenChapter3" class="hidden space-y-6">
+            <!-- Header Banner -->
+            <div class="bg-gradient-to-r from-emerald-600 to-teal-500 text-white p-6 rounded-2xl shadow-md flex justify-between items-center">
+                <div>
+                    <span class="bg-white/20 text-white text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider">Capítulo 3</span>
+                    <h2 class="font-fun text-3xl font-extrabold text-amber-200 mt-1">What Do We Have to Do?</h2>
+                    <p class="text-teal-100 text-sm">Uso de <strong>HAVE TO</strong> para acciones necesarias de preparación.</p>
+                </div>
+                <div class="text-5xl hidden sm:block">🎒</div>
+            </div>
+
+            <!-- Narrative & Grammar Box -->
+            <div class="storybook-card p-6 border-l-8 border-emerald-500">
+                <div class="flex items-start space-x-4 mb-4">
+                    <span class="text-3xl">🏠</span>
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-lg">Preparación en el hogar y comunidad:</h3>
+                        <p class="text-slate-600 text-sm">Para estar totalmente seguros, debemos preparar nuestras casas con nuestra familia. ¿Qué cosas tenemos que hacer antes de una emergencia?</p>
+                    </div>
+                </div>
+
+                <div class="chalkboard p-5 text-white font-fun">
+                    <h4 class="text-amber-300 font-bold text-xl mb-2 flex items-center">
+                        <i class="fas fa-clipboard-check mr-2"></i> Gramática: HAVE TO
+                    </h4>
+                    <p class="text-slate-200 text-sm mb-3"><strong>HAVE TO</strong> expresa una necesidad u obligación externa (tener que). Usaremos los sujetos <em>I, YOU, WE, THEY + HAVE TO + VERB</em>.</p>
+                    <div class="bg-white/10 p-3 rounded-lg border border-white/20 text-xs sm:text-sm font-sans">
+                        <span class="text-emerald-400 font-bold block mb-1">✔ HAVE TO (Necesidad de preparación)</span>
+                        <p>We <strong>have to</strong> know the evacuation route.<br><span class="text-slate-300 italic">(Tenemos que conocer la ruta de evacuación)</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chapter 3 Exercises -->
+            <div class="storybook-card p-6 space-y-8">
+                <!-- Ex 1 -->
+                <div>
+                    <h4 class="font-bold text-brand-blue text-lg mb-4 flex items-center">
+                        <span class="bg-emerald-100 text-emerald-700 w-8 h-8 rounded-full flex items-center justify-center mr-2 text-sm font-bold">1</span>
+                        Exercise 1: Multiple Choice (2 pts)
+                    </h4>
+                    <div id="ch3-ex1-container" class="space-y-4"></div>
+                </div>
+
+                <hr class="border-slate-200">
+
+                <!-- Ex 2: Unscramble -->
+                <div>
+                    <h4 class="font-bold text-brand-blue text-lg mb-2 flex items-center">
+                        <span class="bg-emerald-100 text-emerald-700 w-8 h-8 rounded-full flex items-center justify-center mr-2 text-sm font-bold">2</span>
+                        Exercise 2: Sentence Unscramble (3 pts)
+                    </h4>
+                    <p class="text-xs text-slate-500 mb-4">Haz clic en las palabras en orden para formar las oraciones correctas.</p>
+                    <div id="ch3-ex2-container" class="space-y-6"></div>
+                </div>
+
+                <hr class="border-slate-200">
+
+                <!-- Ex 3: Checklist Dropdown -->
+                <div>
+                    <h4 class="font-bold text-brand-blue text-lg mb-2 flex items-center">
+                        <span class="bg-emerald-100 text-emerald-700 w-8 h-8 rounded-full flex items-center justify-center mr-2 text-sm font-bold">3</span>
+                        Exercise 3: Complete the Emergency Checklist (2 pts)
+                    </h4>
+                    <p class="text-xs text-slate-500 mb-4">Selecciona el verbo correcto para completar cada regla de la mochila de emergencia.</p>
+                    <div id="ch3-ex3-container" class="space-y-3 bg-emerald-50 p-4 rounded-xl border border-emerald-200"></div>
+                </div>
+            </div>
+
+            <!-- Navigation Chapter 3 -->
+            <div class="flex justify-between items-center pt-4">
+                <button onclick="showScreen('screenChapter2')" class="bg-slate-300 hover:bg-slate-400 text-slate-700 font-bold px-6 py-3 rounded-xl">
+                    <i class="fas fa-arrow-left mr-2"></i> Cap. 2
+                </button>
+                <button onclick="finishStorybook()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-fun font-bold text-xl px-8 py-4 rounded-xl shadow-lg border-b-4 border-emerald-800 btn-bounce">
+                    <i class="fas fa-check-circle mr-2"></i> FINALIZAR Y VER RESULTADOS
+                </button>
+            </div>
+        </section>
+
+        <!-- SCREEN 4: RESULTS & SCOREBOARD -->
+        <section id="screenResults" class="hidden storybook-card p-6 sm:p-10 text-center max-w-3xl mx-auto space-y-6">
+            <div class="bg-amber-100 p-4 rounded-full w-24 h-24 mx-auto flex items-center justify-center text-5xl shadow-inner">
+                <span id="resultIcon">🏆</span>
+            </div>
+
+            <div>
+                <h2 class="font-fun text-3xl sm:text-4xl font-extrabold text-brand-blue">RESULTADOS FINALES</h2>
+                <p id="studentResultGreeting" class="text-slate-600 font-semibold mt-1">¡Buen trabajo en tu aventura educativa!</p>
+            </div>
+
+            <!-- Score Cards Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="bg-sky-50 p-3 rounded-xl border border-sky-200 text-center">
+                    <span class="block text-xs font-bold text-sky-700 uppercase">Capítulo 1</span>
+                    <span id="scoreCap1" class="font-fun text-2xl font-bold text-sky-900">0 / 6</span>
+                </div>
+                <div class="bg-purple-50 p-3 rounded-xl border border-purple-200 text-center">
+                    <span class="block text-xs font-bold text-purple-700 uppercase">Capítulo 2</span>
+                    <span id="scoreCap2" class="font-fun text-2xl font-bold text-purple-900">0 / 7</span>
+                </div>
+                <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200 text-center">
+                    <span class="block text-xs font-bold text-emerald-700 uppercase">Capítulo 3</span>
+                    <span id="scoreCap3" class="font-fun text-2xl font-bold text-emerald-900">0 / 7</span>
+                </div>
+                <div class="bg-amber-50 p-3 rounded-xl border-2 border-amber-400 text-center">
+                    <span class="block text-xs font-bold text-amber-800 uppercase">Total Final</span>
+                    <span id="scoreTotal" class="font-fun text-3xl font-extrabold text-amber-600">0 / 20</span>
+                </div>
+            </div>
+
+            <!-- CNEB Level Badge -->
+            <div id="cnebLevelBadge" class="p-6 rounded-2xl border-2 text-left space-y-2">
+                <!-- Injected via JS -->
+            </div>
+
+            <!-- Actions buttons -->
+            <div class="pt-4 space-y-3 sm:space-y-0 sm:flex sm:space-x-4 justify-center">
+                <button id="btnDownloadCert" onclick="openCertificateModal()" class="hidden w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white font-fun font-bold text-xl py-3 px-8 rounded-xl shadow-lg border-b-4 border-amber-700 btn-bounce">
+                    <i class="fas fa-award mr-2"></i> VER DIPLOMA DIGITAL
+                </button>
+                <button onclick="restartStorybook()" class="w-full sm:w-auto bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-lg py-3 px-6 rounded-xl">
+                    <i class="fas fa-redo mr-2"></i> Intentar de nuevo
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-800 text-slate-400 text-center text-xs py-4 px-4 mt-8">
+        <p>AIP - Aula de Innovación Pedagógica • Educación Secundaria Perú</p>
+        <p class="text-slate-500 mt-1">Unidad de Aprendizaje 7: "Be Ready, Stay Safe!" • Grammar Challenge (Should, Must, Have to)</p>
+    </footer>
+
+    <!-- DIPLOMA MODAL SCREEN -->
+    <div id="certificateModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl p-6 sm:p-10 max-w-3xl w-full border-8 border-amber-400 shadow-2xl relative my-auto">
+            
+            <!-- Close Button -->
+            <button onclick="closeCertificateModal()" class="no-print absolute top-4 right-4 bg-slate-200 hover:bg-slate-300 w-10 h-10 rounded-full flex items-center justify-center text-slate-700 font-bold">
+                ✕
+            </button>
+
+            <!-- Certificate Inner Design -->
+            <div class="border-4 border-dashed border-sky-600 p-6 sm:p-8 rounded-2xl text-center bg-gradient-to-b from-sky-50/50 to-amber-50/30 relative">
+                
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-4xl">🇵🇪</span>
+                    <span class="text-xs font-bold uppercase tracking-widest text-slate-500">República del Perú - Minedu AIP</span>
+                    <span class="text-4xl">🎒</span>
+                </div>
+
+                <h3 class="font-fun font-extrabold text-2xl sm:text-4xl text-brand-blue tracking-wide">CERTIFICATE OF ACHIEVEMENT</h3>
+                <p class="text-xs text-amber-700 font-bold tracking-widest uppercase mt-1">English Unit 7 - Grammar Challenge</p>
+
+                <p class="text-slate-600 italic text-sm mt-6">This certificate is proudly awarded to:</p>
+                <h4 id="certStudentName" class="font-fun text-3xl sm:text-4xl font-black text-amber-600 underline decoration-amber-300 decoration-4 my-2">Estudiante</h4>
+                <p class="text-xs text-slate-500">Student of 1.° Grade of Secondary School</p>
+
+                <p class="text-slate-700 text-sm max-w-lg mx-auto my-6">
+                    For successfully demonstrating mastery of earthquake safety rules, recommendations, and emergency preparation using <strong>SHOULD, MUST,</strong> and <strong>HAVE TO</strong>.
+                </p>
+
+                <!-- Stats summary -->
+                <div class="grid grid-cols-2 gap-4 max-w-md mx-auto bg-white p-3 rounded-xl border border-amber-200 mb-6 text-sm">
+                    <div>
+                        <span class="block text-xs text-slate-400">Final Score:</span>
+                        <span id="certScore" class="font-bold text-emerald-600 text-lg">20 / 20</span>
+                    </div>
+                    <div>
+                        <span class="block text-xs text-slate-400">Achievement Level:</span>
+                        <span id="certLevel" class="font-bold text-brand-blue text-lg">AD - Logro Destacado</span>
+                    </div>
+                </div>
+
+                <div class="flex justify-around items-end pt-6 mt-6 border-t border-slate-300">
+                    <div class="text-center">
+                        <div class="border-b border-slate-400 w-36 mb-1 mx-auto"></div>
+                        <p class="text-xs font-bold text-slate-600">Docente de Inglés</p>
+                        <p class="text-[10px] text-slate-400">Área de Inglés - Secondary</p>
+                    </div>
+                    <div class="text-center">
+                        <span class="text-3xl block">🛡️</span>
+                        <span class="text-[10px] font-bold text-emerald-700 uppercase">Be Ready, Stay Safe!</span>
+                    </div>
+                    <div class="text-center">
+                        <p id="certDate" class="border-b border-slate-400 w-36 mb-1 mx-auto text-xs font-semibold text-slate-700">--/--/----</p>
+                        <p class="text-xs font-bold text-slate-600">Fecha de Emisión</p>
+                        <p class="text-[10px] text-slate-400">AIP Perú</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="no-print mt-6 flex justify-center space-x-4">
+                <button onclick="window.print()" class="bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 px-6 rounded-xl shadow btn-bounce flex items-center">
+                    <i class="fas fa-print mr-2"></i> Imprimir / Guardar PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CANVAS FOR CONFETTI EFFECT -->
+    <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-50"></canvas>
+
+    <!-- JS ENGINE -->
+    <script>
+        /* ==========================================================================
+           STATE & DATA MANAGERS
+           ========================================================================== */
+        let studentData = {
+            name: "",
+            avatar: "👦",
+            scores: { ch1: 0, ch2: 0, ch3: 0, total: 0 },
+            answers: {}
+        };
+
+        let soundEnabled = true;
+
+        // Audio synthesizer using Web Audio API (No external sound files required)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            if (!soundEnabled) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'click') {
+                    osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.05);
+                } else if (type === 'success') {
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+                } else if (type === 'fanfare') {
+                    const notes = [523.25, 659.25, 783.99, 1046.50];
+                    notes.forEach((freq, idx) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.frequency.setValueAtTime(freq, audioCtx.currentTime + idx * 0.1);
+                        g.gain.setValueAtTime(0.15, audioCtx.currentTime + idx * 0.1);
+                        g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + idx * 0.1 + 0.2);
+                        o.start(audioCtx.currentTime + idx * 0.1);
+                        o.stop(audioCtx.currentTime + idx * 0.1 + 0.2);
+                    });
+                }
+            } catch (e) {
+                console.log("Audio not supported or restricted");
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('soundIcon');
+            icon.className = soundEnabled ? 'fas fa-volume-up' : 'fas fa-volume-mute';
+        }
+
+        /* ==========================================================================
+           UI NAVIGATION & INITIALIZATION
+           ========================================================================== */
+        function selectAvatar(emoji) {
+            studentData.avatar = emoji;
+            document.querySelectorAll('.avatar-opt').forEach(btn => btn.classList.remove('ring-4', 'ring-brand-sky'));
+            event.currentTarget.classList.add('ring-4', 'ring-brand-sky');
+            playSound('click');
+        }
+
+        function startStorybook() {
+            const nameInput = document.getElementById('studentNameInput').value.trim();
+            if (!nameInput) {
+                alert("Por favor, ingresa tu nombre completo para comenzar.");
+                return;
+            }
+            studentData.name = nameInput;
+            document.getElementById('headerStudentName').textContent = studentData.name;
+            document.getElementById('headerAvatar').textContent = studentData.avatar;
+            document.getElementById('userInfoHeader').classList.remove('hidden');
+            document.getElementById('progressBarContainer').classList.remove('hidden');
+
+            playSound('success');
+            showScreen('screenChapter1');
+        }
+
+        function showScreen(screenId) {
+            const screens = ['screenCover', 'screenChapter1', 'screenChapter2', 'screenChapter3', 'screenResults'];
+            screens.forEach(s => document.getElementById(s).classList.add('hidden'));
+            document.getElementById(screenId).classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Update Progress Bar
+            const bar = document.getElementById('progressBar');
+            if (screenId === 'screenChapter1') bar.style.width = '33%';
+            else if (screenId === 'screenChapter2') bar.style.width = '66%';
+            else if (screenId === 'screenChapter3') bar.style.width = '100%';
+            else if (screenId === 'screenResults') bar.style.width = '100%';
+        }
+
+        /* ==========================================================================
+           CHAPTER 1: EXERCISES BUILDER & LOGIC (SHOULD / SHOULDN'T)
+           ========================================================================== */
+        const ch1Ex1Data = [
+            { id: 'c1_q1', q: '1. We ______ prepare an emergency backpack.', opts: ['should', "shouldn't", "mustn't"], ans: 'should' },
+            { id: 'c1_q2', q: '2. Students ______ push their classmates.', opts: ['should', "shouldn't", 'have to'], ans: "shouldn't" },
+            { id: 'c1_q3', q: '3. We ______ keep the classroom clean and safe.', opts: ["shouldn't", 'should', "mustn't"], ans: 'should' },
+            { id: 'c1_q4', q: '4. You ______ run on the stairs during an earthquake.', opts: ['should', "shouldn't", 'have to'], ans: "shouldn't" },
+            { id: 'c1_q5', q: '5. Families ______ practice safety drills at home.', opts: ['should', "shouldn't", "mustn't"], ans: 'should' }
+        ];
+
+        const ch1Ex2Data = [
+            { id: 'c1_e2_1', text: '1. We ______ stay calm during tremors.', ans: 'should' },
+            { id: 'c1_e2_2', text: '2. We ______ block the emergency exits.', ans: "shouldn't" },
+            { id: 'c1_e2_3', text: '3. Students ______ follow safety advice.', ans: 'should' },
+            { id: 'c1_e2_4', text: '4. You ______ use elevators during a quake.', ans: "shouldn't" },
+            { id: 'c1_e2_5', text: '5. Families ______ store clean water and food.', ans: 'should' }
+        ];
+
+        const ch1MatchingData = [
+            { sitId: 's1', situation: '⚡ Emergency backpack is empty', advId: 'a1', advice: 'You should prepare it.', match: 1 },
+            { sitId: 's2', situation: '🌊 You see a flooded street', advId: 'a2', advice: "You shouldn't cross the street.", match: 2 },
+            { sitId: 's3', situation: '👥 Classmates are pushing in stairs', advId: 'a3', advice: "You shouldn't push.", match: 3 },
+            { sitId: 's4', situation: '🗺️ You don\'t know the safety route', advId: 'a4', advice: 'You should know the route.', match: 4 }
+        ];
+
+        let selectedSituation = null;
+        let matchedPairs = {};
+
+        function renderChapter1() {
+            // Ex 1
+            const ex1Box = document.getElementById('ch1-ex1-container');
+            ex1Box.innerHTML = ch1Ex1Data.map(item => `
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <p class="font-semibold text-slate-800 mb-2">${item.q}</p>
+                    <div class="flex flex-wrap gap-2">
+                        ${item.opts.map(opt => `
+                            <button onclick="setMCQAnswer('${item.id}', &quot;${opt.replace(/"/g, '&quot;')}&quot;, this)" class="mcq-btn-${item.id} bg-white hover:bg-sky-50 text-slate-700 px-4 py-2 rounded-lg border border-slate-300 font-medium text-sm transition">
+                                ${opt}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+
+            // Ex 2
+            const ex2Box = document.getElementById('ch1-ex2-container');
+            ex2Box.innerHTML = ch1Ex2Data.map(item => `
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center justify-between">
+                    <span class="text-sm font-semibold text-slate-700">${item.text}</span>
+                    <select id="${item.id}" class="bg-white border-2 border-slate-300 rounded-lg px-3 py-1.5 text-sm font-bold text-slate-800 focus:border-brand-sky outline-none">
+                        <option value="">Elegir...</option>
+                        <option value="should">should</option>
+                        <option value="shouldn't">shouldn't</option>
+                    </select>
+                </div>
+            `).join('');
+
+            // Ex 3 Matching
+            const sitBox = document.getElementById('ch1-situations');
+            const advBox = document.getElementById('ch1-advices');
+            
+            sitBox.innerHTML = ch1MatchingData.map(item => `
+                <div onclick="selectMatchSituation('${item.sitId}', ${item.match}, this)" id="${item.sitId}" class="p-3 bg-sky-50 border-2 border-sky-200 rounded-xl cursor-pointer hover:border-sky-400 text-xs font-semibold text-sky-900 transition flex justify-between items-center">
+                    <span>${item.situation}</span>
+                    <i class="fas fa-circle text-[10px] text-sky-400"></i>
+                </div>
+            `).join('');
+
+            advBox.innerHTML = [...ch1MatchingData].sort(() => Math.random() - 0.5).map(item => `
+                <div onclick="selectMatchAdvice('${item.advId}', ${item.match}, this)" id="${item.advId}" class="p-3 bg-amber-50 border-2 border-amber-200 rounded-xl cursor-pointer hover:border-amber-400 text-xs font-semibold text-amber-900 transition flex justify-between items-center">
+                    <i class="fas fa-circle text-[10px] text-amber-400"></i>
+                    <span>${item.advice}</span>
+                </div>
+            `).join('');
+        }
+
+        function setMCQAnswer(qId, val, btnElem) {
+            studentData.answers[qId] = val;
+            document.querySelectorAll(`.mcq-btn-${qId}`).forEach(b => {
+                b.className = `mcq-btn-${qId} bg-white hover:bg-sky-50 text-slate-700 px-4 py-2 rounded-lg border border-slate-300 font-medium text-sm transition`;
+            });
+            btnElem.className = `mcq-btn-${qId} bg-brand-sky text-white px-4 py-2 rounded-lg border border-brand-sky font-bold text-sm transition shadow-sm`;
+            playSound('click');
+        }
+
+        function selectMatchSituation(sitId, matchVal, elem) {
+            playSound('click');
+            document.querySelectorAll('#ch1-situations > div').forEach(d => d.classList.remove('ring-4', 'ring-sky-400'));
+            elem.classList.add('ring-4', 'ring-sky-400');
+            selectedSituation = { id: sitId, match: matchVal, elem: elem };
+        }
+
+        function selectMatchAdvice(advId, matchVal, elem) {
+            if (!selectedSituation) return;
+            playSound('click');
+
+            if (selectedSituation.match === matchVal) {
+                // Correct Match
+                matchedPairs[selectedSituation.id] = true;
+                selectedSituation.elem.className = "p-3 bg-emerald-100 border-2 border-emerald-400 rounded-xl text-xs font-bold text-emerald-900 flex justify-between items-center";
+                elem.className = "p-3 bg-emerald-100 border-2 border-emerald-400 rounded-xl text-xs font-bold text-emerald-900 flex justify-between items-center";
+                selectedSituation.elem.onclick = null;
+                elem.onclick = null;
+                playSound('success');
+            } else {
+                // Incorrect match animation
+                elem.classList.add('bg-rose-100', 'border-rose-400');
+                setTimeout(() => elem.classList.remove('bg-rose-100', 'border-rose-400'), 500);
+            }
+            selectedSituation = null;
+            document.querySelectorAll('#ch1-situations > div').forEach(d => d.classList.remove('ring-4', 'ring-sky-400'));
+        }
+
+        function validateChapter1() {
+            let score = 0;
+
+            // Ex 1 Scoring (5 items = 2 pts total -> 0.4 ea)
+            ch1Ex1Data.forEach(item => {
+                if (studentData.answers[item.id] === item.ans) score += 0.4;
+            });
+
+            // Ex 2 Scoring (5 items = 2 pts total -> 0.4 ea)
+            ch1Ex2Data.forEach(item => {
+                const val = document.getElementById(item.id).value;
+                if (val === item.ans) score += 0.4;
+            });
+
+            // Ex 3 Scoring (4 matches = 2 pts total -> 0.5 ea)
+            score += Object.keys(matchedPairs).length * 0.5;
+
+            studentData.scores.ch1 = Math.min(6, Math.round(score * 10) / 10);
+            playSound('success');
+            showScreen('screenChapter2');
+        }
+
+        /* ==========================================================================
+           CHAPTER 2: EXERCISES & WORD SEARCH BUILDER (MUST / MUSTN'T)
+           ========================================================================== */
+        const ch2Ex1Data = [
+            { id: 'c2_q1', q: '1. During an earthquake, we ______ stay calm.', opts: ['must', "mustn't", "shouldn't"], ans: 'must' },
+            { id: 'c2_q2', q: '2. We ______ push our classmates during evacuation.', opts: ['must', "mustn't", 'have to'], ans: "mustn't" },
+            { id: 'c2_q3', q: '3. Students ______ follow the teacher\'s instructions.', opts: ["mustn't", 'must', "shouldn't"], ans: 'must' },
+            { id: 'c2_q4', q: '4. We ______ block the emergency evacuation route.', opts: ['must', "mustn't", 'should'], ans: "mustn't" },
+            { id: 'c2_q5', q: '5. You ______ protect your head under a strong table.', opts: ['must', "mustn't", "shouldn't"], ans: 'must' }
+        ];
+
+        const ch2Ex2Data = [
+            { id: 'c2_e2_1', text: '1. We ______ follow the teacher to the safe zone.', ans: 'must' },
+            { id: 'c2_e2_2', text: '2. We ______ run inside the classroom.', ans: "mustn't" },
+            { id: 'c2_e2_3', text: '3. Students ______ cover their heads.', ans: 'must' },
+            { id: 'c2_e2_4', text: '4. We ______ break window glass.', ans: "mustn't" },
+            { id: 'c2_e2_5', text: '5. Everyone ______ keep the exits completely clear.', ans: 'must' }
+        ];
+
+        // Word Search Matrix (10x10)
+        const wordList = ['EARTHQUAKE', 'SAFETY', 'CALM', 'TEACHER', 'EXIT', 'ROUTE', 'HELP', 'EMERGENCY'];
+        const gridLetters = [
+            ['E','A','R','T','H','Q','U','A','K','E'],
+            ['E','M','E','R','G','E','N','C','Y','S'],
+            ['S','A','F','E','T','Y','A','A','B','A'],
+            ['T','E','A','C','H','E','R','L','C','F'],
+            ['R','O','U','T','E','D','E','M','D','E'],
+            ['X','Y','Z','W','P','X','I','T','E','T'],
+            ['E','X','I','T','Q','A','R','S','T','Y'],
+            ['H','E','L','P','U','V','W','X','Y','Z'],
+            ['C','A','L','M','A','B','C','D','E','F'],
+            ['S','A','F','E','Z','O','N','E','G','H']
+        ];
+
+        let foundWords = new Set();
+        let selectedCells = [];
+
+        function renderChapter2() {
+            // Ex 1
+            const ex1Box = document.getElementById('ch2-ex1-container');
+            ex1Box.innerHTML = ch2Ex1Data.map(item => `
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <p class="font-semibold text-slate-800 mb-2">${item.q}</p>
+                    <div class="flex flex-wrap gap-2">
+                        ${item.opts.map(opt => `
+                            <button onclick="setMCQAnswer('${item.id}', &quot;${opt.replace(/"/g, '&quot;')}&quot;, this)" class="mcq-btn-${item.id} bg-white hover:bg-purple-50 text-slate-700 px-4 py-2 rounded-lg border border-slate-300 font-medium text-sm transition">
+                                ${opt}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+
+            // Ex 2
+            const ex2Box = document.getElementById('ch2-ex2-container');
+            ex2Box.innerHTML = ch2Ex2Data.map(item => `
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center justify-between">
+                    <span class="text-sm font-semibold text-slate-700">${item.text}</span>
+                    <select id="${item.id}" class="bg-white border-2 border-slate-300 rounded-lg px-3 py-1.5 text-sm font-bold text-slate-800 focus:border-purple-500 outline-none">
+                        <option value="">Elegir...</option>
+                        <option value="must">must</option>
+                        <option value="mustn't">mustn't</option>
+                    </select>
+                </div>
+            `).join('');
+
+            // Word Search Grid
+            const gridContainer = document.getElementById('wordSearchGrid');
+            gridContainer.innerHTML = '';
+            for (let r = 0; r < 10; r++) {
+                for (let c = 0; c < 10; c++) {
+                    const char = gridLetters[r][c];
+                    const cell = document.createElement('div');
+                    cell.className = 'word-cell flex items-center justify-center font-extrabold text-sm sm:text-base py-2 rounded cursor-pointer text-slate-300 hover:bg-slate-700';
+                    cell.textContent = char;
+                    cell.dataset.r = r;
+                    cell.dataset.c = c;
+                    cell.onclick = () => toggleWordSearchCell(r, c, cell, char);
+                    gridContainer.appendChild(cell);
+                }
+            }
+
+            // Word List Render
+            const listContainer = document.getElementById('wordSearchList');
+            listContainer.innerHTML = wordList.map(w => `
+                <div id="word-item-${w}" class="bg-white p-2 rounded border border-purple-200 text-slate-600 flex items-center space-x-1">
+                    <i class="far fa-square text-purple-400" id="icon-${w}"></i>
+                    <span>${w}</span>
+                </div>
+            `).join('');
+        }
+
+        function toggleWordSearchCell(r, c, elem, char) {
+            playSound('click');
+            if (elem.classList.contains('found')) return;
+
+            if (elem.classList.contains('selected')) {
+                elem.classList.remove('selected');
+                selectedCells = selectedCells.filter(item => !(item.r === r && item.c === c));
+            } else {
+                elem.classList.add('selected');
+                selectedCells.push({ r, c, char, elem });
+            }
+
+            checkWordSearchMatch();
+        }
+
+        function checkWordSearchMatch() {
+            const currentWord = selectedCells.map(item => item.char).join('');
+            const revWord = currentWord.split('').reverse().join('');
+
+            wordList.forEach(word => {
+                if (!foundWords.has(word) && (currentWord === word || revWord === word)) {
+                    foundWords.add(word);
+                    playSound('success');
+
+                    // Mark cells as found
+                    selectedCells.forEach(item => {
+                        item.elem.classList.remove('selected');
+                        item.elem.classList.add('found');
+                    });
+                    selectedCells = [];
+
+                    // Update UI list
+                    const wordItem = document.getElementById(`word-item-${word}`);
+                    const icon = document.getElementById(`icon-${word}`);
+                    if (wordItem) {
+                        wordItem.className = "bg-emerald-100 p-2 rounded border border-emerald-300 text-emerald-800 font-bold flex items-center space-x-1";
+                        icon.className = "fas fa-check-square text-emerald-600";
+                    }
+
+                    document.getElementById('wordsFoundCount').textContent = foundWords.size;
+                }
+            });
+        }
+
+        function validateChapter2() {
+            let score = 0;
+
+            // Ex 1 Scoring (5 items = 2 pts total -> 0.4 ea)
+            ch2Ex1Data.forEach(item => {
+                if (studentData.answers[item.id] === item.ans) score += 0.4;
+            });
+
+            // Ex 2 Scoring (5 items = 2 pts total -> 0.4 ea)
+            ch2Ex2Data.forEach(item => {
+                const val = document.getElementById(item.id).value;
+                if (val === item.ans) score += 0.4;
+            });
+
+            // Ex 3 Scoring (8 words found = 3 pts total -> ~0.375 ea)
+            score += foundWords.size * 0.375;
+
+            studentData.scores.ch2 = Math.min(7, Math.round(score * 10) / 10);
+            playSound('success');
+            showScreen('screenChapter3');
+        }
+
+        /* ==========================================================================
+           CHAPTER 3: EXERCISES & UNSCRAMBLE BUILDER (HAVE TO)
+           ========================================================================== */
+        const ch3Ex1Data = [
+            { id: 'c3_q1', q: '1. We ______ know the evacuation route.', opts: ['have to', "mustn't", "shouldn't"], ans: 'have to' },
+            { id: 'c3_q2', q: '2. Students ______ participate in earthquake safety drills.', opts: ["shouldn't", 'have to', "mustn't"], ans: 'have to' },
+            { id: 'c3_q3', q: '3. Families ______ prepare an emergency backpack at home.', opts: ['have to', "shouldn't", "mustn't"], ans: 'have to' },
+            { id: 'c3_q4', q: '4. We ______ listen carefully to safety instructions.', opts: ['have to', "shouldn't", "mustn't"], ans: 'have to' },
+            { id: 'c3_q5', q: '5. They ______ keep emergency numbers near the phone.', opts: ['have to', "mustn't", "shouldn't"], ans: 'have to' }
+        ];
+
+        const ch3UnscrambleData = [
+            { id: 'unsc_1', words: ['We', 'have', 'to', 'know', 'the route.'], ans: 'We have to know the route.' },
+            { id: 'unsc_2', words: ['They', 'have', 'to', 'prepare', 'an emergency kit.'], ans: 'They have to prepare an emergency kit.' },
+            { id: 'unsc_3', words: ['Students', 'have', 'to', 'listen to', 'the teacher.'], ans: 'Students have to listen to the teacher.' }
+        ];
+
+        let unscrambleState = {};
+
+        const ch3ChecklistData = [
+            { id: 'chk_1', prefix: '1. We have to', opts: ['prepare', 'know', 'follow', 'help', 'listen'], ans: 'prepare', suffix: 'an emergency backpack.' },
+            { id: 'chk_2', prefix: '2. We have to', opts: ['prepare', 'know', 'follow', 'help', 'listen'], ans: 'know', suffix: 'the evacuation route.' },
+            { id: 'chk_3', prefix: '3. We have to', opts: ['prepare', 'know', 'follow', 'help', 'listen'], ans: 'follow', suffix: 'the safety rules.' },
+            { id: 'chk_4', prefix: '4. We have to', opts: ['prepare', 'know', 'follow', 'help', 'listen'], ans: 'help', suffix: 'our classmates in need.' },
+            { id: 'chk_5', prefix: '5. We have to', opts: ['prepare', 'know', 'follow', 'help', 'listen'], ans: 'listen', suffix: 'to emergency alarms.' }
+        ];
+
+        function renderChapter3() {
+            // Ex 1
+            const ex1Box = document.getElementById('ch3-ex1-container');
+            ex1Box.innerHTML = ch3Ex1Data.map(item => `
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <p class="font-semibold text-slate-800 mb-2">${item.q}</p>
+                    <div class="flex flex-wrap gap-2">
+                        ${item.opts.map(opt => `
+                            <button onclick="setMCQAnswer('${item.id}', &quot;${opt.replace(/"/g, '&quot;')}&quot;, this)" class="mcq-btn-${item.id} bg-white hover:bg-emerald-50 text-slate-700 px-4 py-2 rounded-lg border border-slate-300 font-medium text-sm transition">
+                                ${opt}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+
+            // Ex 2 Unscramble
+            const ex2Box = document.getElementById('ch3-ex2-container');
+            ex2Box.innerHTML = ch3UnscrambleData.map(item => {
+                unscrambleState[item.id] = [];
+                const shuffled = [...item.words].sort(() => Math.random() - 0.5);
+
+                return `
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <p class="text-xs text-slate-500 mb-2 font-bold uppercase">Oración ${item.id.replace('unsc_', '')}:</p>
+                        
+                        <!-- Selected Words Drop Area -->
+                        <div id="target-${item.id}" class="min-h-[48px] bg-white border-2 border-dashed border-emerald-300 rounded-lg p-2 flex flex-wrap gap-2 mb-3">
+                            <span class="text-slate-400 text-xs italic self-center">Haz clic en las palabras de abajo...</span>
+                        </div>
+
+                        <!-- Source Word Chips -->
+                        <div id="source-${item.id}" class="flex flex-wrap gap-2">
+                            ${shuffled.map((w, idx) => `
+                                <button onclick="pickUnscrambleWord('${item.id}', &quot;${w.replace(/"/g, '&quot;')}&quot;, this)" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-semibold px-3 py-1.5 rounded-lg border border-emerald-300 text-sm transition">
+                                    ${w}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Ex 3 Checklist
+            const ex3Box = document.getElementById('ch3-ex3-container');
+            ex3Box.innerHTML = ch3ChecklistData.map(item => `
+                <div class="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-700">
+                    <span>${item.prefix}</span>
+                    <select id="${item.id}" class="bg-white border-2 border-emerald-300 rounded-lg px-3 py-1 text-emerald-900 font-bold focus:border-emerald-500 outline-none">
+                        <option value="">(verbo)</option>
+                        ${item.opts.map(o => `<option value="${o}">${o}</option>`).join('')}
+                    </select>
+                    <span>${item.suffix}</span>
+                </div>
+            `).join('');
+        }
+
+        function pickUnscrambleWord(itemId, word, btnElem) {
+            playSound('click');
+            const target = document.getElementById(`target-${itemId}`);
+            
+            // Clear placeholder text if first word
+            if (unscrambleState[itemId].length === 0) {
+                target.innerHTML = '';
+            }
+
+            unscrambleState[itemId].push(word);
+            btnElem.style.visibility = 'hidden';
+
+            // Append word chip to target
+            const chip = document.createElement('span');
+            chip.className = "bg-emerald-600 text-white font-bold px-3 py-1 rounded-lg text-sm shadow-sm cursor-pointer";
+            chip.textContent = word;
+            chip.onclick = () => resetUnscramble(itemId);
+            target.appendChild(chip);
+        }
+
+        function resetUnscramble(itemId) {
+            playSound('click');
+            unscrambleState[itemId] = [];
+            const target = document.getElementById(`target-${itemId}`);
+            target.innerHTML = '<span class="text-slate-400 text-xs italic self-center">Haz clic en las palabras de abajo...</span>';
+            
+            // Show all buttons again
+            document.querySelectorAll(`#source-${itemId} button`).forEach(b => b.style.visibility = 'visible');
+        }
+
+        function validateChapter3() {
+            let score = 0;
+
+            // Ex 1 Scoring (5 items = 2 pts total -> 0.4 ea)
+            ch3Ex1Data.forEach(item => {
+                if (studentData.answers[item.id] === item.ans) score += 0.4;
+            });
+
+            // Ex 2 Scoring (3 sentences = 3 pts total -> 1 pt ea)
+            ch3UnscrambleData.forEach(item => {
+                const builtSentence = unscrambleState[item.id].join(' ');
+                if (builtSentence === item.ans) score += 1.0;
+            });
+
+            // Ex 3 Scoring (5 items = 2 pts total -> 0.4 ea)
+            ch3ChecklistData.forEach(item => {
+                const val = document.getElementById(item.id).value;
+                if (val === item.ans) score += 0.4;
+            });
+
+            studentData.scores.ch3 = Math.min(7, Math.round(score * 10) / 10);
+        }
+
+        /* ==========================================================================
+           FINAL RESULTS & DIPLOMA EVALUATION ENGINE
+           ========================================================================== */
+        function finishStorybook() {
+            validateChapter3();
+
+            const c1 = studentData.scores.ch1;
+            const c2 = studentData.scores.ch2;
+            const c3 = studentData.scores.ch3;
+            const total = Math.round(c1 + c2 + c3);
+            studentData.scores.total = total;
+
+            document.getElementById('scoreCap1').textContent = `${c1} / 6`;
+            document.getElementById('scoreCap2').textContent = `${c2} / 7`;
+            document.getElementById('scoreCap3').textContent = `${c3} / 7`;
+            document.getElementById('scoreTotal').textContent = `${total} / 20`;
+            document.getElementById('studentResultGreeting').textContent = `¡Felicitaciones, ${studentData.name}! Has completado la Unidad 7.`;
+
+            const badgeBox = document.getElementById('cnebLevelBadge');
+            const certBtn = document.getElementById('btnDownloadCert');
+
+            // CNEB Evaluation Rubric Engine
+            if (total >= 18) { // AD
+                badgeBox.className = "p-6 rounded-2xl border-2 bg-emerald-50 border-emerald-300 text-emerald-900";
+                badgeBox.innerHTML = `
+                    <div class="flex items-center space-x-3 mb-2">
+                        <span class="bg-emerald-600 text-white font-fun font-bold text-2xl px-4 py-1 rounded-xl">NIVEL AD</span>
+                        <h4 class="font-bold text-lg">LOGRO DESTACADO (18 - 20 pts)</h4>
+                    </div>
+                    <p class="text-sm text-emerald-800">Demuestra un aprendizaje sobresaliente en el manejo de <em>should, must y have to</em> contextuados en la prevención de sismos.</p>
+                `;
+                certBtn.classList.remove('hidden');
+                triggerConfetti();
+                playSound('fanfare');
+            } else if (total >= 15) { // A
+                badgeBox.className = "p-6 rounded-2xl border-2 bg-sky-50 border-sky-300 text-sky-900";
+                badgeBox.innerHTML = `
+                    <div class="flex items-center space-x-3 mb-2">
+                        <span class="bg-sky-600 text-white font-fun font-bold text-2xl px-4 py-1 rounded-xl">NIVEL A</span>
+                        <h4 class="font-bold text-lg">LOGRO ESPERADO (15 - 17 pts)</h4>
+                    </div>
+                    <p class="text-sm text-sky-800">Demuestra el nivel esperado para 1.° de secundaria. Reconoce la mayoría de estructuras gramaticales de seguridad correctamente.</p>
+                `;
+                certBtn.classList.remove('hidden');
+                triggerConfetti();
+                playSound('fanfare');
+            } else if (total >= 11) { // B
+                badgeBox.className = "p-6 rounded-2xl border-2 bg-amber-50 border-amber-300 text-amber-900";
+                badgeBox.innerHTML = `
+                    <div class="flex items-center space-x-3 mb-2">
+                        <span class="bg-amber-500 text-white font-fun font-bold text-2xl px-4 py-1 rounded-xl">NIVEL B</span>
+                        <h4 class="font-bold text-lg">EN PROCESO (11 - 14 pts)</h4>
+                    </div>
+                    <p class="text-sm text-amber-800">Estás en camino. Revisa nuevamente las reglas de <em>SHOULD</em> y <em>MUST</em> para mejorar tu puntaje y obtener tu certificado.</p>
+                `;
+                certBtn.classList.add('hidden');
+                playSound('success');
+            } else { // C
+                badgeBox.className = "p-6 rounded-2xl border-2 bg-rose-50 border-rose-300 text-rose-900";
+                badgeBox.innerHTML = `
+                    <div class="flex items-center space-x-3 mb-2">
+                        <span class="bg-rose-500 text-white font-fun font-bold text-2xl px-4 py-1 rounded-xl">NIVEL C</span>
+                        <h4 class="font-bold text-lg">EN INICIO (0 - 10 pts)</h4>
+                    </div>
+                    <p class="text-sm text-rose-800">Keep practicing! You can improve your English. Vuelve a intentar el storybook para reforzar tus conocimientos.</p>
+                `;
+                certBtn.classList.add('hidden');
+            }
+
+            showScreen('screenResults');
+        }
+
+        function openCertificateModal() {
+            document.getElementById('certStudentName').textContent = studentData.name;
+            document.getElementById('certScore').textContent = `${studentData.scores.total} / 20`;
+            document.getElementById('certLevel').textContent = studentData.scores.total >= 18 ? "AD - Logro Destacado" : "A - Logro Esperado";
+            document.getElementById('certDate').textContent = new Date().toLocaleDateString('es-PE');
+            document.getElementById('certificateModal').classList.remove('hidden');
+            playSound('click');
+        }
+
+        function closeCertificateModal() {
+            document.getElementById('certificateModal').classList.add('hidden');
+        }
+
+        function restartStorybook() {
+            studentData.scores = { ch1: 0, ch2: 0, ch3: 0, total: 0 };
+            studentData.answers = {};
+            matchedPairs = {};
+            foundWords.clear();
+            selectedCells = [];
+            showScreen('screenCover');
+        }
+
+        /* ==========================================================================
+           CONFETTI CANVAS ANIMATION
+           ========================================================================== */
+        function triggerConfetti() {
+            const canvas = document.getElementById('confettiCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            const colors = ['#F59E0B', '#10B981', '#3B82F6', '#EC4899', '#8B5CF6'];
+
+            for (let i = 0; i < 120; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    size: Math.random() * 8 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    vy: Math.random() * 3 + 2,
+                    vx: Math.random() * 2 - 1
+                });
+            }
+
+            let animationFrame;
+            function render() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    p.y += p.vy;
+                    p.x += p.vx;
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+
+                if (particles.some(p => p.y < canvas.height)) {
+                    animationFrame = requestAnimationFrame(render);
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    cancelAnimationFrame(animationFrame);
+                }
+            }
+            render();
+        }
+
+        /* Initialize Exercise Markup on Load */
+        window.onload = function() {
+            renderChapter1();
+            renderChapter2();
+            renderChapter3();
+        };
+    </script>
+</body>
+</html>
